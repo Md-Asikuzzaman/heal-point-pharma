@@ -6,7 +6,7 @@ import Credentials from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 
-export const runtime = "nodejs"; 
+export const runtime = "nodejs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -25,6 +25,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const { email, password } = parsed.data;
+
+        // Allow a quick admin login using environment variables.
+        // Set ADMIN_EMAIL and ADMIN_PASSWORD in your environment (e.g. .env.local)
+        if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+          if (
+            email === process.env.ADMIN_EMAIL &&
+            password === process.env.ADMIN_PASSWORD
+          ) {
+            return {
+              id: "admin",
+              name: "Administrator",
+              email: process.env.ADMIN_EMAIL,
+              image: null,
+              role: "admin",
+            };
+          }
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },
