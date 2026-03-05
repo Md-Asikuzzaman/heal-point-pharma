@@ -26,23 +26,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, password } = parsed.data;
 
-        // Allow a quick admin login using environment variables.
-        // Set ADMIN_EMAIL and ADMIN_PASSWORD in your environment (e.g. .env.local)
-        if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
-          if (
-            email === process.env.ADMIN_EMAIL &&
-            password === process.env.ADMIN_PASSWORD
-          ) {
-            return {
-              id: "admin",
-              name: "Administrator",
-              email: process.env.ADMIN_EMAIL,
-              image: null,
-              role: "admin",
-            };
-          }
-        }
-
         const user = await prisma.user.findUnique({
           where: { email },
         });
@@ -72,7 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || "default_secret_key",
 
   pages: {
     signIn: "/auth/login",
