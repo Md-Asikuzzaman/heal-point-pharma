@@ -15,7 +15,10 @@ interface Params {
 }
 
 const updateStatusSchema = z.object({
-  status: z.enum([ProductRequestStatus.APPROVED, ProductRequestStatus.REJECTED]),
+  status: z.enum([
+    ProductRequestStatus.APPROVED,
+    ProductRequestStatus.REJECTED,
+  ]),
 });
 
 /**
@@ -24,14 +27,14 @@ const updateStatusSchema = z.object({
  */
 export async function PATCH(
   req: NextRequest,
-  ctx: Params
+  ctx: Params,
 ): Promise<NextResponse<ApiResponse<ProductRequest>>> {
   try {
     const session = await auth();
     if (!session?.user || session.user.role !== "admin") {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Admin access required." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -39,7 +42,7 @@ export async function PATCH(
     if (!requestId) {
       return NextResponse.json(
         { success: false, error: "Request ID is required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -48,8 +51,11 @@ export async function PATCH(
 
     if (!result.success) {
       return NextResponse.json(
-        { success: false, error: "Invalid status. Must be APPROVED or REJECTED." },
-        { status: 400 }
+        {
+          success: false,
+          error: "Invalid status. Must be APPROVED or REJECTED.",
+        },
+        { status: 400 },
       );
     }
 
@@ -63,14 +69,14 @@ export async function PATCH(
     if (!existingRequest) {
       return NextResponse.json(
         { success: false, error: "Product request not found." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (existingRequest.status !== ProductRequestStatus.PENDING) {
       return NextResponse.json(
         { success: false, error: "Request has already been processed." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -93,7 +99,58 @@ export async function PATCH(
     console.error("[PRODUCT_REQUEST_PATCH_ERROR]", error);
     return NextResponse.json(
       { success: false, error: "Internal server error." },
-      { status: 500 }
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * @route DELETE /api/product-requests/{id}
+ * @desc Delete a product request (admin only)
+ */
+export async function DELETE(
+  _req: NextRequest,
+  ctx: Params,
+): Promise<NextResponse<ApiResponse<null>>> {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Admin access required." },
+        { status: 401 },
+      );
+    }
+
+    const { id: requestId } = await ctx.params;
+    if (!requestId) {
+      return NextResponse.json(
+        { success: false, error: "Request ID is required." },
+        { status: 400 },
+      );
+    }
+
+    const existingRequest = await prisma.productRequest.findUnique({
+      where: { id: requestId },
+      select: { id: true },
+    });
+
+    if (!existingRequest) {
+      return NextResponse.json(
+        { success: false, error: "Product request not found." },
+        { status: 404 },
+      );
+    }
+
+    await prisma.productRequest.delete({
+      where: { id: requestId },
+    });
+
+    return NextResponse.json({ success: true, data: null }, { status: 200 });
+  } catch (error) {
+    console.error("[PRODUCT_REQUEST_DELETE_ERROR]", error);
+    return NextResponse.json(
+      { success: false, error: "Internal server error." },
+      { status: 500 },
     );
   }
 }
