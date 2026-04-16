@@ -1,12 +1,7 @@
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
-import { NextPage } from "next";
 
-interface Props {
-  children: React.ReactNode;
-}
-
-const Layout: NextPage<Props> = ({ children }) => {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -14,6 +9,4 @@ const Layout: NextPage<Props> = ({ children }) => {
       <Footer />
     </div>
   );
-};
-
-export default Layout;
+}

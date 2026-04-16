@@ -22,7 +22,7 @@ import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import SubmitButton from "@/app/auth/_components/SubmitButton";
-import { Product } from "@prisma/client";
+import type { Product } from "@/lib/generated/prisma";
 import { productSchema } from "@/schema";
 
 type ProductSchema = z.infer<typeof productSchema>;

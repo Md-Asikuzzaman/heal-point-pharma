@@ -1,7 +1,7 @@
 "use client";
 
+import { Product } from "@/lib/generated/prisma";
 import { useCartStore } from "@/store/useCartStore";
-import { Product } from "@prisma/client";
 import { Minus, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

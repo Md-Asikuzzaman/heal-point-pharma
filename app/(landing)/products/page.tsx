@@ -1,7 +1,7 @@
 import Container from "@/components/shared/Container";
 import Heading from "@/components/shared/Heading";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { Product } from "@prisma/client";
+import { Product } from "@/lib/generated/prisma";
 
 export const revalidate = 60;
 

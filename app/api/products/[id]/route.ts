@@ -1,9 +1,9 @@
 import { auth } from "@/lib/auth";
 import cloudinary from "@/lib/cloudinary";
+import { Product } from "@/lib/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/schema";
 import { getPublicIdFromUrl } from "@/utils/cloudinary";
-import { Product } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import slugify from "slugify";
 

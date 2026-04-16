@@ -1,4 +1,4 @@
-import { Product } from "@prisma/client";
+import type { Product } from "@/lib/generated/prisma";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -37,7 +37,7 @@ export const useCartStore = create<CartStore>()(
                         ? 10
                         : item.quantity + product.quantity,
                   }
-                : item
+                : item,
             ),
           });
         } else {
@@ -78,7 +78,7 @@ export const useCartStore = create<CartStore>()(
         } else {
           set({
             cart: cart.map((item) =>
-              item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+              item.id === id ? { ...item, quantity: item.quantity - 1 } : item,
             ),
           });
         }
@@ -95,12 +95,12 @@ export const useCartStore = create<CartStore>()(
       getTotalPrice: () => {
         return get().cart.reduce(
           (acc, item) => acc + item.quantity * item.price,
-          0
+          0,
         );
       },
     }),
     {
       name: "cart-storage", // key for localStorage
-    }
-  )
+    },
+  ),
 );

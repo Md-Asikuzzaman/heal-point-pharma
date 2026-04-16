@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter } from "../ui/card";
 import { useRouter } from "next/navigation";
 import slugify from "slugify";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { Product } from "@prisma/client";
+import type { Product } from "@/lib/generated/prisma";
 
 export const ProductCard = ({ ...product }: Product) => {
   const router = useRouter();

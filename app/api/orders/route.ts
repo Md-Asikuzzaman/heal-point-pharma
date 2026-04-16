@@ -1,5 +1,5 @@
+import { Order } from "@/lib/generated/prisma";
 import { prisma } from "@/lib/prisma";
-import { Order } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 interface ApiResponse<T> {
