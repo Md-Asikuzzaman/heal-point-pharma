@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Product } from "@prisma/client";
+import type { Product } from "@/lib/generated/prisma";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ColumnDef,
@@ -102,7 +102,7 @@ export default function ProductTable() {
               onClick={() => {
                 if (
                   window.confirm(
-                    "Are you sure you want to delete this product?"
+                    "Are you sure you want to delete this product?",
                   )
                 ) {
                   mutate(product.id);
@@ -217,7 +217,7 @@ export default function ProductTable() {
                     <TableHead key={header.id}>
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                     </TableHead>
                   ))}
@@ -231,7 +231,7 @@ export default function ProductTable() {
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}

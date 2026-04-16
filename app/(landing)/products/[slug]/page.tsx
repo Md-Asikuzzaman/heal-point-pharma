@@ -1,8 +1,8 @@
-import { Product } from "@prisma/client";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import ProjectDetailsCard from "../_components/ProjectDetailsCard";
 import { prisma } from "@/lib/prisma";
+import { Product } from "@/lib/generated/prisma";
 
 export const revalidate = 60;
 interface Props {

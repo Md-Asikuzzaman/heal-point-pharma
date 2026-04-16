@@ -1,6 +1,6 @@
-import { Product } from "@prisma/client";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import type { Product } from '@/lib/generated/prisma';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 type ProductStoreType = Product & {
   quantity: number;
@@ -8,13 +8,17 @@ type ProductStoreType = Product & {
 
 type CartStore = {
   cart: ProductStoreType[];
-  addToCart: (product: ProductStoreType) => void;
+  addToCart: (product: ProductStoreType) => boolean;
   removeFromCart: (id: string) => void;
-  increaseQuantity: (id: string) => void;
+  increaseQuantity: (id: string, stockLimit?: number) => boolean;
   decreaseQuantity: (id: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  validateCartStock: (products: Product[]) => {
+    valid: boolean;
+    invalidItems: string[];
+  };
 };
 
 export const useCartStore = create<CartStore>()(
@@ -24,26 +28,32 @@ export const useCartStore = create<CartStore>()(
 
       addToCart: (product) => {
         const cart = get().cart;
+
+        // Check if product has stock
+        if (product.stock <= 0) {
+          return false;
+        }
+
         const exist = cart.find((item) => item.id === product.id);
 
         if (exist) {
+          // Check if we can add more (respecting stock limit)
+          const maxQty = Math.min(10, product.stock);
+          const newQty = Math.min(exist.quantity + product.quantity, maxQty);
+
           set({
             cart: cart.map((item) =>
-              item.id === product.id
-                ? {
-                    ...item,
-                    quantity:
-                      item.quantity + product.quantity > 10
-                        ? 10
-                        : item.quantity + product.quantity,
-                  }
-                : item
+              item.id === product.id ? { ...item, quantity: newQty } : item,
             ),
           });
         } else {
-          const qty = product.quantity > 10 ? 10 : product.quantity;
+          const qty = Math.min(
+            Math.max(1, product.quantity),
+            Math.min(10, product.stock),
+          );
           set({ cart: [...cart, { ...product, quantity: qty }] });
         }
+        return true;
       },
 
       removeFromCart: (id) => {
@@ -52,19 +62,29 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      increaseQuantity: (id) => {
+      increaseQuantity: (id, stockLimit) => {
+        const cart = get().cart;
+        const item = cart.find((item) => item.id === id);
+
+        if (!item) return false;
+
+        // Check stock limit
+        const effectiveStockLimit = stockLimit ?? item.stock;
+        const maxAllowed = Math.min(10, effectiveStockLimit);
+
+        if (item.quantity >= maxAllowed) {
+          return false;
+        }
+
         set({
-          cart: get().cart.map((item) => {
+          cart: cart.map((item) => {
             if (item.id === id) {
-              const newQuantity = item.quantity + 1;
-              return {
-                ...item,
-                quantity: newQuantity > 10 ? 10 : newQuantity,
-              };
+              return { ...item, quantity: item.quantity + 1 };
             }
             return item;
           }),
         });
+        return true;
       },
 
       decreaseQuantity: (id) => {
@@ -78,7 +98,7 @@ export const useCartStore = create<CartStore>()(
         } else {
           set({
             cart: cart.map((item) =>
-              item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+              item.id === id ? { ...item, quantity: item.quantity - 1 } : item,
             ),
           });
         }
@@ -95,12 +115,26 @@ export const useCartStore = create<CartStore>()(
       getTotalPrice: () => {
         return get().cart.reduce(
           (acc, item) => acc + item.quantity * item.price,
-          0
+          0,
         );
+      },
+
+      validateCartStock: (products) => {
+        const cart = get().cart;
+        const invalidItems: string[] = [];
+
+        for (const cartItem of cart) {
+          const product = products.find((p) => p.id === cartItem.id);
+          if (!product || product.stock < cartItem.quantity) {
+            invalidItems.push(cartItem.title);
+          }
+        }
+
+        return { valid: invalidItems.length === 0, invalidItems };
       },
     }),
     {
-      name: "cart-storage", // key for localStorage
-    }
-  )
+      name: 'cart-storage', // key for localStorage
+    },
+  ),
 );
