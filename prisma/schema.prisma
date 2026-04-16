@@ -19,7 +19,7 @@ datasource db {
 
 // Product Model
 model Product {
-  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
   title            String
   slug             String
   price            Float
@@ -29,8 +29,36 @@ model Product {
   medicineQuantity String
   rating           Float?
   description      String
+  stock            Int              @default(0)
+  tags             String[]
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  requests         ProductRequest[]
 
   @@map("products")
+}
+
+// Product Request Model
+model ProductRequest {
+  id        String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String              @db.ObjectId
+  productId String              @db.ObjectId
+  message   String?
+  status    ProductRequestStatus @default(PENDING)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_requests")
+}
+
+enum ProductRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 // User related models
@@ -66,17 +94,18 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
-  email         String?   @unique
+  email         String?          @unique
   password      String?
-  role          Role      @default(user)
+  role          Role             @default(user)
   address       Address?
-  emailVerified DateTime? @map("email_verified")
+  emailVerified DateTime?        @map("email_verified")
   image         String?
 
   accounts  Account[]
   sessions  Session[]
+  requests  ProductRequest[]
   addressId String?   @db.ObjectId
 
   @@map("users")

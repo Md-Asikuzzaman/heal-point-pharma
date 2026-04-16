@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
-import RichTextEditor from "@/components/shared/rich-text-editor";
+import RichTextEditor from '@/components/shared/rich-text-editor';
 import {
   Form,
   FormControl,
@@ -14,18 +14,19 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { convertToBase64 } from "@/utils";
-import Image from "next/image";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { convertToBase64 } from '@/utils';
+import Image from 'next/image';
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import SubmitButton from "@/app/auth/_components/SubmitButton";
-import type { Product } from "@/lib/generated/prisma";
-import { productSchema } from "@/schema";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import SubmitButton from '@/app/auth/_components/SubmitButton';
+import type { Product } from '@/lib/generated/prisma';
+import { productFormSchema } from '@/schema';
+import { Checkbox } from '@/components/ui/checkbox';
 
-type ProductSchema = z.infer<typeof productSchema>;
+type ProductSchema = z.infer<typeof productFormSchema>;
 
 interface Props {
   product?: Product;
@@ -36,15 +37,18 @@ const ProductForm = ({ product }: Props) => {
   const queryClient = useQueryClient();
 
   const form = useForm<ProductSchema>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productFormSchema),
     defaultValues: {
-      title: product?.title ?? "",
-      brand: product?.brand ?? "",
+      title: product?.title ?? '',
+      brand: product?.brand ?? '',
       price: product?.price ?? 0,
-      image: product?.image ?? "",
-      medicineType: product?.medicineType ?? "",
-      medicineQuantity: product?.medicineQuantity ?? "",
-      description: product?.description ?? "",
+      image: product?.image ?? '',
+      medicineType: product?.medicineType ?? '',
+      medicineQuantity: product?.medicineQuantity ?? '',
+      description: product?.description ?? '',
+      stock: product?.stock ?? 0,
+      tags: product?.tags?.join(', ') ?? '',
+      isActive: product?.isActive ?? true,
     },
   });
 
@@ -62,29 +66,29 @@ const ProductForm = ({ product }: Props) => {
 
   // Add Order Mutation
   const { mutate: addOrder, isPending: addOrderPending } = useMutation({
-    mutationKey: ["add-order"],
+    mutationKey: ['add-order'],
     mutationFn: async (data: ProductSchema) => {
       const res = await axios.post(`/api/products`, data);
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Product added successfully!");
+      toast.success('Product added successfully!');
       form.reset();
       setPreviewImage(null);
-      queryClient.invalidateQueries({ queryKey: ["get-orders"] });
+      queryClient.invalidateQueries({ queryKey: ['get-orders'] });
     },
   });
 
   // Update Order Mutation
   const { mutate: updateOrder, isPending: updateOrderPending } = useMutation({
-    mutationKey: ["update-order"],
+    mutationKey: ['update-order'],
     mutationFn: async (data: ProductSchema) => {
       const res = await axios.patch(`/api/products/${product?.id}`, data);
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Product updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["get-orders"] });
+      toast.success('Product updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['get-orders'] });
     },
   });
 
@@ -94,29 +98,29 @@ const ProductForm = ({ product }: Props) => {
 
     try {
       const base64 = await convertToBase64(file);
-      form.setValue("image", base64, { shouldValidate: true });
+      form.setValue('image', base64, { shouldValidate: true });
       setPreviewImage(base64);
     } catch {
-      toast.error("Failed to convert image");
+      toast.error('Failed to convert image');
     }
   };
 
   return (
-    <div className="w-full p-6 border rounded-xl shadow-sm bg-white">
-      <h2 className="text-xl font-semibold mb-4">
-        {product ? "Update Product" : "Add Product"}
+    <div className='w-full p-6 border rounded-xl shadow-sm bg-white'>
+      <h2 className='text-xl font-semibold mb-4'>
+        {product ? 'Update Product' : 'Add Product'}
       </h2>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
           {/* Title */}
           <FormField
             control={form.control}
-            name="title"
+            name='title'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter product title" {...field} />
+                  <Input placeholder='Enter product title' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -128,9 +132,9 @@ const ProductForm = ({ product }: Props) => {
             <FormLabel>Description</FormLabel>
             <FormControl>
               <Controller
-                name="description"
+                name='description'
                 control={form.control}
-                rules={{ required: "Description is required" }}
+                rules={{ required: 'Description is required' }}
                 render={({ field }) => (
                   <RichTextEditor
                     value={field.value}
@@ -147,12 +151,12 @@ const ProductForm = ({ product }: Props) => {
           {/* Brand */}
           <FormField
             control={form.control}
-            name="brand"
+            name='brand'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Brand</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter brand name" {...field} />
+                  <Input placeholder='Enter brand name' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -162,12 +166,12 @@ const ProductForm = ({ product }: Props) => {
           {/* Price */}
           <FormField
             control={form.control}
-            name="price"
+            name='price'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Price (৳)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="Enter price" {...field} />
+                  <Input type='number' placeholder='Enter price' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -177,25 +181,25 @@ const ProductForm = ({ product }: Props) => {
           {/* Image Upload */}
           <FormField
             control={form.control}
-            name="image"
+            name='image'
             render={() => (
               <FormItem>
                 <FormLabel>Product Image</FormLabel>
                 <FormControl>
                   <Input
-                    type="file"
-                    accept="image/*"
+                    type='file'
+                    accept='image/*'
                     onChange={handleImageChange}
                   />
                 </FormControl>
                 {previewImage && (
-                  <div className="mt-2">
+                  <div className='mt-2'>
                     <Image
                       src={previewImage}
-                      alt="Preview"
+                      alt='Preview'
                       width={200}
                       height={200}
-                      className="rounded border"
+                      className='rounded border'
                     />
                   </div>
                 )}
@@ -207,12 +211,12 @@ const ProductForm = ({ product }: Props) => {
           {/* Medicine Type */}
           <FormField
             control={form.control}
-            name="medicineType"
+            name='medicineType'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Medicine Type</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Tablet, Capsule, Syrup" {...field} />
+                  <Input placeholder='e.g. Tablet, Capsule, Syrup' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -222,21 +226,82 @@ const ProductForm = ({ product }: Props) => {
           {/* Medicine Quantity */}
           <FormField
             control={form.control}
-            name="medicineQuantity"
+            name='medicineQuantity'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Medicine Quantity</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. 500 ml, 10 pieces" {...field} />
+                  <Input placeholder='e.g. 500 ml, 10 pieces' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* Stock Management - Two columns */}
+          <div className='grid grid-cols-2 gap-4'>
+            <FormField
+              control={form.control}
+              name='stock'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stock Quantity</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min='0'
+                      placeholder='Enter stock quantity'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='tags'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags (comma separated)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='e.g. pain relief, fever, headache'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Active Status */}
+          <FormField
+            control={form.control}
+            name='isActive'
+            render={({ field }) => (
+              <FormItem className='flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4'>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className='space-y-1 leading-none'>
+                  <FormLabel>Active Product</FormLabel>
+                  <p className='text-sm text-muted-foreground'>
+                    Make this product visible on the store
+                  </p>
+                </div>
+              </FormItem>
+            )}
+          />
+
           <SubmitButton
-            text={product ? "Update Product" : "Add Product"}
-            loadingText={product ? "Product Updating..." : "Product Adding..."}
+            text={product ? 'Update Product' : 'Add Product'}
+            loadingText={product ? 'Product Updating...' : 'Product Adding...'}
             isPending={addOrderPending || updateOrderPending}
           />
         </form>

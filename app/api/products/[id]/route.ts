@@ -1,11 +1,11 @@
-import { auth } from "@/lib/auth";
-import cloudinary from "@/lib/cloudinary";
-import { Product } from "@/lib/generated/prisma";
-import { prisma } from "@/lib/prisma";
-import { productSchema } from "@/schema";
-import { getPublicIdFromUrl } from "@/utils/cloudinary";
-import { NextRequest, NextResponse } from "next/server";
-import slugify from "slugify";
+import { auth } from '@/lib/auth';
+import cloudinary from '@/lib/cloudinary';
+import { Product } from '@/lib/generated/prisma';
+import { prisma } from '@/lib/prisma';
+import { productSchema } from '@/schema';
+import { getPublicIdFromUrl } from '@/utils/cloudinary';
+import { NextRequest, NextResponse } from 'next/server';
+import slugify from 'slugify';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -23,15 +23,15 @@ interface Params {
  */
 export async function DELETE(
   req: NextRequest,
-  ctx: Params
+  ctx: Params,
 ): Promise<NextResponse<ApiResponse<null>>> {
   try {
     // Check authentication
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: "Unauthorized access." },
-        { status: 401 }
+        { success: false, error: 'Unauthorized access.' },
+        { status: 401 },
       );
     }
 
@@ -39,8 +39,8 @@ export async function DELETE(
     const { id: productId } = await ctx.params;
     if (!productId) {
       return NextResponse.json(
-        { success: false, error: "Product ID is required." },
-        { status: 400 }
+        { success: false, error: 'Product ID is required.' },
+        { status: 400 },
       );
     }
 
@@ -51,8 +51,8 @@ export async function DELETE(
 
     if (!existingProduct) {
       return NextResponse.json(
-        { success: false, error: "Product not found." },
-        { status: 404 }
+        { success: false, error: 'Product not found.' },
+        { status: 404 },
       );
     }
 
@@ -67,10 +67,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("[PRODUCT_DELETE_ERROR]", error);
+    console.error('[PRODUCT_DELETE_ERROR]', error);
     return NextResponse.json(
-      { success: false, error: "Internal server error." },
-      { status: 500 }
+      { success: false, error: 'Internal server error.' },
+      { status: 500 },
     );
   }
 }
@@ -81,15 +81,15 @@ export async function DELETE(
  */
 export async function PATCH(
   req: NextRequest,
-  ctx: Params
+  ctx: Params,
 ): Promise<NextResponse<ApiResponse<Product>>> {
   try {
     // Check authentication
     const session = await auth();
     if (!session?.user?.email) {
       return NextResponse.json(
-        { success: false, error: "Unauthorized access." },
-        { status: 401 }
+        { success: false, error: 'Unauthorized access.' },
+        { status: 401 },
       );
     }
 
@@ -98,8 +98,8 @@ export async function PATCH(
     const result = productSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { success: false, error: "Invalid product data." },
-        { status: 400 }
+        { success: false, error: 'Invalid product data.' },
+        { status: 400 },
       );
     }
 
@@ -108,8 +108,8 @@ export async function PATCH(
 
     if (!productId) {
       return NextResponse.json(
-        { success: false, error: "Missing product ID." },
-        { status: 400 }
+        { success: false, error: 'Missing product ID.' },
+        { status: 400 },
       );
     }
 
@@ -120,8 +120,8 @@ export async function PATCH(
 
     if (!existingProduct) {
       return NextResponse.json(
-        { success: false, error: "Product not found." },
-        { status: 404 }
+        { success: false, error: 'Product not found.' },
+        { status: 404 },
       );
     }
 
@@ -131,7 +131,7 @@ export async function PATCH(
 
     // Upload new image
     const uploaded = await cloudinary.uploader.upload(data.image, {
-      folder: "heal-point",
+      folder: 'heal-point',
     });
 
     // Delete old image
@@ -139,11 +139,27 @@ export async function PATCH(
       await cloudinary.uploader.destroy(oldImagePublicId);
     }
 
+    // Parse tags from comma-separated string
+    const tags = data.tags
+      ? data.tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
+
     // Update product
     const updated = await prisma.product.update({
       where: { id: productId },
       data: {
-        ...data,
+        title: data.title,
+        brand: data.brand,
+        price: data.price,
+        medicineType: data.medicineType,
+        medicineQuantity: data.medicineQuantity,
+        description: data.description,
+        stock: data.stock,
+        tags,
+        isActive: data.isActive,
         slug,
         image: uploaded.secure_url,
       },
@@ -151,10 +167,10 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, data: updated }, { status: 200 });
   } catch (error) {
-    console.error("[PRODUCT_PATCH_ERROR]", error);
+    console.error('[PRODUCT_PATCH_ERROR]', error);
     return NextResponse.json(
-      { success: false, error: "Internal server error." },
-      { status: 500 }
+      { success: false, error: 'Internal server error.' },
+      { status: 500 },
     );
   }
 }
@@ -165,26 +181,28 @@ export async function PATCH(
  */
 export async function GET(
   req: NextRequest,
-  ctx: Params
+  ctx: Params,
 ): Promise<NextResponse<ApiResponse<Product>>> {
   try {
     const { id: slug } = await ctx.params;
 
-    const product = await prisma.product.findFirst({ where: { slug } });
+    const product = await prisma.product.findFirst({
+      where: { slug, isActive: true },
+    });
 
     if (!product) {
       return NextResponse.json(
-        { success: false, error: "Product not found." },
-        { status: 404 }
+        { success: false, error: 'Product not found.' },
+        { status: 404 },
       );
     }
 
     return NextResponse.json({ success: true, data: product }, { status: 200 });
   } catch (error) {
-    console.error("[PRODUCT_GET_BY_ID_ERROR]", error);
+    console.error('[PRODUCT_GET_BY_ID_ERROR]', error);
     return NextResponse.json(
-      { success: false, error: "Internal server error." },
-      { status: 500 }
+      { success: false, error: 'Internal server error.' },
+      { status: 500 },
     );
   }
 }
