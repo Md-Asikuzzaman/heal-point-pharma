@@ -15,14 +15,14 @@ interface ApiResponse<T> {
  * @desc Create a product request when item is out of stock
  */
 export async function POST(
-  req: NextRequest
+  req: NextRequest,
 ): Promise<NextResponse<ApiResponse<ProductRequest>>> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, error: "Unauthorized. Please login first." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -32,11 +32,11 @@ export async function POST(
     if (!result.success) {
       return NextResponse.json(
         { success: false, error: "Invalid request data." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { productId, message } = result.data;
+    const { productId, message, requestedQuantity } = result.data;
 
     // Check if product exists and is out of stock
     const product = await prisma.product.findUnique({
@@ -46,14 +46,14 @@ export async function POST(
     if (!product) {
       return NextResponse.json(
         { success: false, error: "Product not found." },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     if (product.stock > 0) {
       return NextResponse.json(
         { success: false, error: "Product is already in stock." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,8 +68,11 @@ export async function POST(
 
     if (existingRequest) {
       return NextResponse.json(
-        { success: false, error: "You already have a pending request for this product." },
-        { status: 400 }
+        {
+          success: false,
+          error: "You already have a pending request for this product.",
+        },
+        { status: 400 },
       );
     }
 
@@ -78,7 +81,8 @@ export async function POST(
       data: {
         userId: session.user.id,
         productId,
-        message: message || null,
+        // Store requested quantity in a machine-readable prefix.
+        message: `[RQ:${requestedQuantity}]${message ? ` ${message}` : ""}`,
         status: ProductRequestStatus.PENDING,
       },
       include: {
@@ -96,7 +100,7 @@ export async function POST(
     console.error("[PRODUCT_REQUEST_POST_ERROR]", error);
     return NextResponse.json(
       { success: false, error: "Internal server error." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -106,14 +110,14 @@ export async function POST(
  * @desc Get all product requests (admin) or user's requests (user)
  */
 export async function GET(
-  req: NextRequest
+  req: NextRequest,
 ): Promise<NextResponse<ApiResponse<ProductRequest[]>>> {
   try {
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json(
         { success: false, error: "Unauthorized." },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -121,8 +125,9 @@ export async function GET(
     const status = searchParams.get("status") as ProductRequestStatus | null;
 
     // If admin, get all requests. Otherwise, get only user's requests
-    const whereClause: any = session.user.role === "admin" ? {} : { userId: session.user.id };
-    
+    const whereClause: any =
+      session.user.role === "admin" ? {} : { userId: session.user.id };
+
     if (status) {
       whereClause.status = status;
     }
@@ -131,7 +136,14 @@ export async function GET(
       where: whereClause,
       include: {
         product: {
-          select: { title: true, slug: true, image: true, stock: true },
+          select: {
+            title: true,
+            slug: true,
+            image: true,
+            stock: true,
+            price: true,
+            medicineQuantity: true,
+          },
         },
         user: {
           select: { name: true, email: true },
@@ -145,7 +157,7 @@ export async function GET(
     console.error("[PRODUCT_REQUEST_GET_ERROR]", error);
     return NextResponse.json(
       { success: false, error: "Internal server error." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

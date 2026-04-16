@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
@@ -10,15 +10,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Bell, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import type { Product } from '@/lib/generated/prisma';
-import axios from 'axios';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Bell, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
+import type { Product } from "@/lib/generated/prisma";
+import axios from "axios";
 
 interface ProductRequestModalProps {
   isOpen: boolean;
@@ -33,14 +33,16 @@ export default function ProductRequestModal({
 }: ProductRequestModalProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
+  const [requestedQuantity, setRequestedQuantity] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const isAuthenticated = status === 'authenticated';
+  const isAuthenticated = status === "authenticated";
 
   const handleClose = () => {
-    setMessage('');
+    setMessage("");
+    setRequestedQuantity(1);
     setIsSuccess(false);
     onClose();
   };
@@ -54,15 +56,16 @@ export default function ProductRequestModal({
     e.preventDefault();
 
     if (!isAuthenticated || !session?.user?.id) {
-      toast.error('Please login first');
+      toast.error("Please login first");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const res = await axios.post('/api/product-requests', {
+      const res = await axios.post("/api/product-requests", {
         productId: product.id,
+        requestedQuantity,
         message: message.trim() || undefined,
       });
 
@@ -72,12 +75,12 @@ export default function ProductRequestModal({
           "Product request submitted! We'll notify you when it's back in stock.",
         );
       } else {
-        toast.error(res.data.error || 'Failed to submit request');
+        toast.error(res.data.error || "Failed to submit request");
       }
     } catch (error: any) {
       const errorMessage =
         error?.response?.data?.error ||
-        'Failed to submit request. Please try again.';
+        "Failed to submit request. Please try again.";
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -86,21 +89,21 @@ export default function ProductRequestModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent className="sm:max-w-md">
         {isSuccess ? (
-          <div className='py-6 text-center'>
-            <CheckCircle className='w-16 h-16 text-green-500 mx-auto mb-4' />
-            <h3 className='text-xl font-semibold text-gray-900 mb-2'>
+          <div className="py-6 text-center">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Request Submitted!
             </h3>
-            <p className='text-gray-600 mb-6'>
-              We&apos;ll notify you when{' '}
-              <span className='font-medium text-gray-900'>{product.title}</span>{' '}
+            <p className="text-gray-600 mb-6">
+              We&apos;ll notify you when{" "}
+              <span className="font-medium text-gray-900">{product.title}</span>{" "}
               is back in stock.
             </p>
             <Button
               onClick={handleClose}
-              className='bg-green-600 hover:bg-green-700'
+              className="bg-green-600 hover:bg-green-700"
             >
               Got it
             </Button>
@@ -108,8 +111,8 @@ export default function ProductRequestModal({
         ) : !isAuthenticated ? (
           <>
             <DialogHeader>
-              <div className='flex items-center gap-2 mb-2'>
-                <Bell className='w-5 h-5 text-amber-500' />
+              <div className="flex items-center gap-2 mb-2">
+                <Bell className="w-5 h-5 text-amber-500" />
                 <DialogTitle>Login Required</DialogTitle>
               </div>
               <DialogDescription>
@@ -117,19 +120,19 @@ export default function ProductRequestModal({
                 it&apos;s back in stock.
               </DialogDescription>
             </DialogHeader>
-            <div className='py-4'>
-              <div className='bg-gray-50 rounded-lg p-4 mb-4'>
-                <p className='font-medium text-gray-900'>{product.title}</p>
-                <p className='text-sm text-gray-500'>{product.brand}</p>
+            <div className="py-4">
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <p className="font-medium text-gray-900">{product.title}</p>
+                <p className="text-sm text-gray-500">{product.brand}</p>
               </div>
             </div>
-            <DialogFooter className='flex gap-2'>
-              <Button variant='outline' onClick={handleClose}>
+            <DialogFooter className="flex gap-2">
+              <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
               <Button
                 onClick={handleLogin}
-                className='bg-green-600 hover:bg-green-700'
+                className="bg-green-600 hover:bg-green-700"
               >
                 Login
               </Button>
@@ -138,8 +141,8 @@ export default function ProductRequestModal({
         ) : (
           <form onSubmit={handleSubmit}>
             <DialogHeader>
-              <div className='flex items-center gap-2 mb-2'>
-                <Bell className='w-5 h-5 text-amber-500' />
+              <div className="flex items-center gap-2 mb-2">
+                <Bell className="w-5 h-5 text-amber-500" />
                 <DialogTitle>Request Product</DialogTitle>
               </div>
               <DialogDescription>
@@ -147,71 +150,87 @@ export default function ProductRequestModal({
               </DialogDescription>
             </DialogHeader>
 
-            <div className='space-y-4 py-4'>
+            <div className="space-y-4 py-4">
               {/* Product Info */}
-              <div className='bg-gray-50 rounded-lg p-4'>
-                <p className='font-medium text-gray-900'>{product.title}</p>
-                <p className='text-sm text-gray-500'>{product.brand}</p>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="font-medium text-gray-900">{product.title}</p>
+                <p className="text-sm text-gray-500">{product.brand}</p>
               </div>
 
               {/* User Info (Read-only) */}
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='space-y-2'>
-                  <Label htmlFor='name'>Name</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
                   <Input
-                    id='name'
-                    value={session?.user?.name || ''}
+                    id="name"
+                    value={session?.user?.name || ""}
                     disabled
-                    className='bg-gray-50'
+                    className="bg-gray-50"
                   />
                 </div>
-                <div className='space-y-2'>
-                  <Label htmlFor='email'>Email</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id='email'
-                    value={session?.user?.email || ''}
+                    id="email"
+                    value={session?.user?.email || ""}
                     disabled
-                    className='bg-gray-50'
+                    className="bg-gray-50"
                   />
                 </div>
               </div>
 
               {/* Optional Message */}
-              <div className='space-y-2'>
-                <Label htmlFor='message'>Message (Optional)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="requestedQuantity">Requested Quantity</Label>
+                <Input
+                  id="requestedQuantity"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={requestedQuantity}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setRequestedQuantity(Number.isFinite(value) ? value : 1);
+                  }}
+                />
+              </div>
+
+              {/* Optional Message */}
+              <div className="space-y-2">
+                <Label htmlFor="message">Message (Optional)</Label>
                 <Textarea
-                  id='message'
-                  placeholder='Any additional information about your request...'
+                  id="message"
+                  placeholder="Any additional information about your request..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={3}
-                  className='resize-none'
+                  className="resize-none"
                 />
               </div>
             </div>
 
-            <DialogFooter className='flex gap-2'>
+            <DialogFooter className="flex gap-2">
               <Button
-                type='button'
-                variant='outline'
+                type="button"
+                variant="outline"
                 onClick={handleClose}
                 disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button
-                type='submit'
-                className='bg-green-600 hover:bg-green-700'
+                type="submit"
+                className="bg-green-600 hover:bg-green-700"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Submitting...
                   </>
                 ) : (
                   <>
-                    <Bell className='w-4 h-4 mr-2' />
+                    <Bell className="w-4 h-4 mr-2" />
                     Notify Me
                   </>
                 )}

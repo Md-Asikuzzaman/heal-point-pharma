@@ -2,6 +2,7 @@
 
 import {
   Calendar,
+  Bell,
   ChevronUp,
   Home,
   Inbox,
@@ -51,6 +52,11 @@ const items = [
     icon: Inbox,
   },
   {
+    title: "Stock Requests",
+    url: "/admin/requests",
+    icon: Bell,
+  },
+  {
     title: "Calendar",
     url: "/admin/calendar",
     icon: Calendar,
@@ -85,7 +91,7 @@ export function AppSidebar() {
                     asChild
                     className={cn(
                       pathname === item.url &&
-                        "bg-slate-900 hover:bg-slate-900 text-white hover:text-white"
+                        "bg-slate-900 hover:bg-slate-900 text-white hover:text-white",
                     )}
                   >
                     <Link href={item.url}>
