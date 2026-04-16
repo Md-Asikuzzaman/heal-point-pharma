@@ -6,10 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-<<<<<<< HEAD
-=======
   output   = "../lib/generated/prisma"
->>>>>>> 2d0dfafbfea5162e70e8659b24a736ed2a955acd
 }
 
 datasource db {
@@ -17,64 +14,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Address {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  fullName  String?
-  phone     String?
-  address   String?
-  city      String?
-  zipCode   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-<<<<<<< HEAD
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique @db.ObjectId
-
-  @@map("address")
-}
-
-// Order related models
-model Order {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
-  fullName  String
-  phone     String
-  address   String
-  city      String
-  zipCode   String
-  createdAt DateTime    @default(now())
-  items     OrderItem[]
-
-  @@map("orders")
-}
-
-model OrderItem {
-  id               String @id @default(auto()) @map("_id") @db.ObjectId
-  productId        String
-  title            String
-  image            String
-  quantity         Int
-  price            Float
-  brand            String
-  medicineType     String
-  medicineQuantity String
-
-  orderId String @db.ObjectId
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@map("order_items")
-}
-
-// Product related models
-model Product {
-  id               String @id @default(auto()) @map("_id") @db.ObjectId
-=======
-
-
-// Product Model
-model Product {
+  // Product Model
+  model Product {
   id               String           @id @default(auto()) @map("_id") @db.ObjectId
->>>>>>> 2d0dfafbfea5162e70e8659b24a736ed2a955acd
   title            String
   slug             String
   price            Float
@@ -84,30 +26,25 @@ model Product {
   medicineQuantity String
   rating           Float?
   description      String
-<<<<<<< HEAD
-=======
   stock            Int              @default(0)
   tags             String[]
   isActive         Boolean          @default(true)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   requests         ProductRequest[]
->>>>>>> 2d0dfafbfea5162e70e8659b24a736ed2a955acd
 
   @@map("products")
 }
 
-<<<<<<< HEAD
-=======
 // Product Request Model
 model ProductRequest {
-  id        String              @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String              @db.ObjectId
-  productId String              @db.ObjectId
+  id        String               @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String               @db.ObjectId
+  productId String               @db.ObjectId
   message   String?
   status    ProductRequestStatus @default(PENDING)
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -121,7 +58,6 @@ enum ProductRequestStatus {
   REJECTED
 }
 
->>>>>>> 2d0dfafbfea5162e70e8659b24a736ed2a955acd
 // User related models
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
@@ -155,7 +91,6 @@ model Session {
 }
 
 model User {
-<<<<<<< HEAD
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
   email         String?   @unique
@@ -163,24 +98,12 @@ model User {
   role          Role      @default(user)
   address       Address?
   emailVerified DateTime? @map("email_verified")
-=======
-  id            String           @id @default(auto()) @map("_id") @db.ObjectId
-  name          String?
-  email         String?          @unique
-  password      String?
-  role          Role             @default(user)
-  address       Address?
-  emailVerified DateTime?        @map("email_verified")
->>>>>>> 2d0dfafbfea5162e70e8659b24a736ed2a955acd
   image         String?
 
   accounts  Account[]
   sessions  Session[]
-<<<<<<< HEAD
-=======
   requests  ProductRequest[]
->>>>>>> 2d0dfafbfea5162e70e8659b24a736ed2a955acd
-  addressId String?   @db.ObjectId
+  addressId String?          @db.ObjectId
 
   @@map("users")
 }
@@ -199,8 +122,6 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
-<<<<<<< HEAD
-=======
 
 // Order related models
 model Order {
@@ -233,10 +154,7 @@ model OrderItem {
   @@map("order_items")
 }
 
-
-
 // Shipping Address related model
-
 model Address {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   fullName  String?
@@ -252,6 +170,3 @@ model Address {
 
   @@map("address")
 }
-
-
->>>>>>> 2d0dfafbfea5162e70e8659b24a736ed2a955acd
